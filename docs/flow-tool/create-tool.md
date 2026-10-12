@@ -10,7 +10,32 @@ Cách làm giống auto-ns-v3: mô tả Tool bằng lời trong ô **Create Tool
 
 ## Phần 0 — Các bản vá (thêm dần, mới nhất ở dưới)
 
-*(chưa có)*
+### Phần 0a — Vá: spinner ngay tại ô ảnh đang tạo
+
+**Lỗi:** khi tạo ảnh, Tool hiện thông báo "đang tạo ảnh" ở đầu màn hình, nên không biết ô nào đang chạy.
+**Dán vào chat của Tool:**
+
+```
+Change only how image generation progress is shown. Change nothing else.
+
+1. Remove the global "generating image" warning/banner at the top of the screen for image
+   generation. Do not show any top-of-page message while an image is being generated.
+2. Every image slot (Màn 0 Kênh: STUDIO_IMG, HOST_IMG, HOST_IN_STUDIO, each cast member's
+   CHAR_IMG and its standardized upload; Màn 3: PLACE_IMG and each card's scene image)
+   tracks its own status: idle | generating | error.
+3. While a slot is generating: keep the slot at its normal size and aspect ratio (9:16);
+   if it already has an image, keep showing it dimmed (about 40% opacity); otherwise show
+   a grey placeholder. Draw a centred circular spinner over it with the text "Đang tạo
+   ảnh…" below the spinner. Disable that slot's "Tạo lại ảnh", "Đổi ảnh", "Bỏ ảnh" buttons
+   only; all other slots and buttons stay usable, and several slots may generate at once.
+4. On success: replace the image in place and remove the spinner. On failure: remove the
+   spinner, keep the previous image if any, and show a short red error line under that
+   slot with the reason and a "Thử lại" button.
+5. Store the status per slot with functional state updates, so finishing one slot never
+   overwrites another slot's status or image.
+```
+
+**Kiểm:** bấm "Tạo lại ảnh" ở 2 ô liên tiếp. Cả hai ô đều phải quay spinner, đầu trang không hiện thông báo nào, ô xong trước hiện ảnh trước, ô còn lại vẫn đang quay.
 
 ---
 
