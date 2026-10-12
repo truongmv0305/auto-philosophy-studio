@@ -37,6 +37,43 @@ Change only how image generation progress is shown. Change nothing else.
 
 **Kiểm:** bấm "Tạo lại ảnh" ở 2 ô liên tiếp. Cả hai ô đều phải quay spinner, đầu trang không hiện thông báo nào, ô xong trước hiện ảnh trước, ô còn lại vẫn đang quay.
 
+### Phần 0b — Vá: giữ hồ sơ kênh và ảnh khi mở lại project
+
+**Lỗi:** bấm "Lưu kênh" xong, thoát rồi vào lại Flow thì phải tạo lại MC, studio, diễn viên. Ảnh vẫn nằm trong project (`DL_{kenh}_*`), nhưng Tool không nhớ hồ sơ và `mediaId` của ảnh. Khối Phần 2 chỉ ghi chung chung là "persistent storage", nên Tool có thể đang giữ hồ sơ trong bộ nhớ tạm, và bộ nhớ này mất khi tải lại trang.
+**Dán vào chat của Tool:**
+
+```
+The channel profile is lost when I close and reopen the project: I must regenerate the
+MC, studio and cast images. Fix persistence. Change nothing else.
+
+0. First tell me in this chat: where "Lưu kênh" currently saves the profile, and which
+   persistent storage the SDK offers (Flow.storage or similar: function names, limits).
+1. Profile record = every Màn 0 field (tên kênh, watermark, chữ biển, kiểu studio, xưng
+   hô, every PERSON PANEL: code, role, POS, all "Thông tin" fields, "Mô tả gửi AI" and its
+   hand-edited flag, chip AI tự tạo / Tải ảnh lên, Chuẩn hoá on/off) PLUS the mediaId and
+   name of every image (STUDIO_IMG, HOST_IMG, HOST_IN_STUDIO, CHAR_IMG_<code>,
+   UPLOAD_<code>) and of the MC voice. Never store image bytes, only mediaIds.
+2. Save it with Flow.storage (key "dlChannel"); if Flow.storage is missing, use
+   localStorage. Save automatically after every field change (debounced 1 s) and right
+   after every image or voice is set; "Lưu kênh" saves immediately too. Show in the
+   header "Đã lưu kênh · HH:MM", or in red "Không lưu được: <reason>" if the save fails.
+3. On tool start: load "dlChannel" BEFORE rendering. If present, open the main screen
+   (not Màn 0) and show every saved image by its mediaId. Never regenerate an image
+   automatically.
+4. If a saved mediaId no longer loads (deleted or rejected), that slot shows "Không tìm
+   thấy ảnh" with two buttons: "Gắn lại từ project" (Flow.media.select() limited to
+   images; the user picks the "DL_{kenh}_..." image; 0 credit) and "Tạo lại ảnh". If the
+   SDK can list project media by name, first try to re-link automatically by the saved
+   name. Same for the voice: clear it and show "Chọn giọng MC".
+5. Màn 0: "Sao chép hồ sơ (JSON)" copies the full record of point 1 (with mediaIds);
+   "Dán hồ sơ (JSON)" restores it (fields, images and voice, no regeneration) and saves.
+```
+
+**Kiểm:**
+1. Đọc câu trả lời mục 0. Nếu Tool báo SDK không có bộ nhớ lâu dài, gửi tôi nguyên văn câu trả lời đó.
+2. Tạo đủ ảnh. Đợi header hiện "Đã lưu kênh". Đóng tab, mở lại project và Tool. Ảnh MC, studio, diễn viên và giọng phải còn nguyên mà không phải bấm tạo lại.
+3. Bấm "Sao chép hồ sơ (JSON)" và lưu vào `assets/channel/<kenh>/profile.json` để dự phòng.
+
 ---
 
 ## Phần 1 — Các bước làm (~30 phút)
@@ -276,7 +313,7 @@ RULES:
 | Popup `Flow.media.select()` không cho tải ảnh từ máy | Tải ảnh vào project bằng giao diện Flow trước (kéo thả vào project), rồi "Chọn ảnh" từ project |
 | S4a không đọc được ảnh | Người dùng tự điền Ngoại hình và Trang phục; ảnh vẫn dùng làm tham chiếu |
 | Flow từ chối ảnh tải lên (ảnh người thật) | Bật "Chuẩn hoá" thử lại; vẫn từ chối thì dùng "AI tự tạo" với mô tả giống ảnh |
-| Không lưu được hồ sơ kênh qua lần mở lại | Lưu ảnh trong project (`DL_{kenh}_*`). Màn 0 có ô "Dán hồ sơ (JSON)" và nút "Sao chép hồ sơ (JSON)" để dán lại |
+| Không lưu được hồ sơ kênh qua lần mở lại | Vá Phần 0b. Nếu SDK không có bộ nhớ lâu dài: mỗi lần mở, bấm "Dán hồ sơ (JSON)" với file `assets/channel/<kenh>/profile.json`; ảnh được gắn lại theo `mediaId`, không phải tạo lại |
 | Không ghép hoặc xuất được | Tải N clip + `thoai.txt`, chạy `python3 scripts/ghep.py <thư mục> --watermark "…" --hook "…"` |
 | Chèn chữ hỏng | Xuất bản ghép không chữ, rồi chạy `ghep.py` như trên |
 | Chế độ Ingredients không nhận audio ref (T1) | T1 dùng A2 (Frames). Giọng giữ bằng VOICE_LOCK |
