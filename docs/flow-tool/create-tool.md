@@ -74,6 +74,39 @@ MC, studio and cast images. Fix persistence. Change nothing else.
 2. Tạo đủ ảnh. Đợi header hiện "Đã lưu kênh". Đóng tab, mở lại project và Tool. Ảnh MC, studio, diễn viên và giọng phải còn nguyên mà không phải bấm tạo lại.
 3. Bấm "Sao chép hồ sơ (JSON)" và lưu vào `assets/channel/<kenh>/profile.json` để dự phòng.
 
+### Phần 0c — Vá: chọn model video, hiện đúng giá credit
+
+**Lỗi:** Tool không có chỗ chọn model, nhãn ghi 12 credit/video. Mục 8 màn 1 của Phần 2 còn để `[SPIKE F‑D]`, nên Tool tự chọn một model và tự đoán giá. Theo auto-ns-v3 (PRD 4.3): `veo-3.1-lite` 10 credit/clip 8s, `veo-3.1-fast` 10–20, `veo-3.1-quality` 100 và không nhận chế độ Thành phần, `veo-3.1-lite-low-priority` 0 credit nhưng chỉ có ở gói Ultra.
+**Dán vào chat của Tool:**
+
+```
+Add a video model picker and show the real credit cost. Change nothing else.
+
+0. First tell me in this chat: the exact model id the tool sends to Flow.generate.video
+   now, where the "12 credit" label comes from, and which video models the SDK offers
+   (ids, credit cost, supported modes Frames/Ingredients, durations).
+1. Screen 1: "Model video" chips, shown by default (not hidden in options), built from
+   the models the SDK offers; at least: "Veo 3.1 Lite · 10 credit" (veo-3.1-lite,
+   DEFAULT), "Veo 3.1 Fast" (veo-3.1-fast), "Veo 3.1 Quality" (veo-3.1-quality), and
+   "Lite low-priority · 0 credit (gói Ultra)" (veo-3.1-lite-low-priority) only if the SDK
+   lists it for this account. Each chip shows the cost the SDK reports; if the SDK gives
+   no cost, use: lite 10, fast 20, quality 100, low-priority 0, and mark it "~".
+2. A model that does not support the clip's mode (e.g. Quality with Ingredients) is shown
+   disabled with the note "Không hỗ trợ chế độ <mode>".
+3. Use the selected model for every Flow.generate.video call (card button and "Tạo tất cả
+   video"). Every cost label (screen 1 estimate, card buttons, "Tạo tất cả video", the
+   confirmation) = number of clips × cost of the selected model. No other hard-coded cost.
+4. Each card keeps the model its clip was made with and shows it under the player
+   ("Veo 3.1 Lite · 10 credit"). Changing the model does NOT mark clips "Cần tạo lại".
+5. Save the chosen model with the channel profile (key "dlChannel", field videoModel)
+   so it survives reopening the project.
+```
+
+**Kiểm:**
+1. Đọc câu trả lời mục 0 rồi gửi tôi: Tool đang dùng model nào, và danh sách model kèm giá mà SDK báo.
+2. Ở màn 1, chọn "Veo 3.1 Lite". Nhãn phải là "10 credit" mỗi clip.
+3. Ghi số credit trước, tạo **1 clip**, rồi ghi số credit sau. Gửi tôi số bị trừ thật, vì nhãn trên Tool có thể khác với số Flow trừ.
+
 ---
 
 ## Phần 1 — Các bước làm (~30 phút)
@@ -183,7 +216,7 @@ SCREEN 1 – "Thiết lập"
 7. "Tông": chips "AI tự chọn" · "Căng thẳng – kịch tính" · "Ấm áp – tâm tình" ·
    "Nghiêm khắc – thức tỉnh".
 8. "Model video": list the Veo models the SDK offers with their credit cost;
-   default [SPIKE F‑D].
+   default veo-3.1-lite (Phần 0c; may change after SPIKE F‑D).
 Button "Tạo ý tưởng": box empty -> run S1, S2, S3; box filled -> CLIPS = SPLIT(box), run
 S1s. Then go to screen 2.
 
